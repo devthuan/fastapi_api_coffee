@@ -35,23 +35,12 @@ def create_order_crud(order: OrderCreate, user_id : int, db: Session):
                 quantity = order_detail.quantity
                 product = db.query(tables.Products).filter_by(id=product_id).first()
                 if product:
-                    if product.quantity_available < quantity:
+                    if product.quantity < quantity:
                         raise HTTPException(status_code=400, detail=generate_response("error", 400, f"Not enough quantity available for product: {product.name_product}"))
-                    product.quantity_available -= quantity
-                    
-                    # Update số lượng nguyên liệu
-                    formulas = db.query(tables.Formulas).filter(tables.Formulas.product_id == product_id).all()
-                    for item_formula in formulas:
-                        warehouse_id = item_formula.warehouse_id
-                        quantity_req = item_formula.quantity_required
-                        ingredient = db.query(tables.Warehouse).filter_by(id=warehouse_id).first()
-                        if ingredient and ingredient.quantity_per_unit >= quantity_req * quantity:
-                            ingredient.quantity_per_unit -= quantity_req * quantity
-                        else:
-                            raise HTTPException(status_code=400, detail=generate_response("error", 400, "Not enough ingredients."))
+                    product.quantity -= quantity
                     
                     db.add(product)  # Thêm lại sản phẩm sau khi cập nhật
-                    if product.quantity_available < 0:
+                    if product.quantity < 0:
                         raise HTTPException(status_code=400, detail=generate_response("error", 400, f"Invalid quantity available for product: {product.name_product}"))
         
         return generate_response("success", 200, "Create order successfully", order_new.id)

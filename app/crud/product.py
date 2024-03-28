@@ -71,32 +71,18 @@ def get_all_product(page:int , limit:int, db: Session):
             raise HTTPException(status_code=404, detail=generate_response("error", 404, "Product not found"))
         data_product_detail =[]
         for product in products:
-            # Lấy danh sách nguyên liệu và công thức tương ứng từ bảng Formulas và Warehouse
-            list_ingredients = db.query(tables.Formulas, tables.Warehouse)\
-                                .join(tables.Warehouse, tables.Formulas.warehouse_id == tables.Warehouse.id)\
-                                .filter(tables.Formulas.product_id == product.id)\
-                                .all()
-
-            # Tạo danh sách thông tin nguyên liệu
-            data_ingredients = []
-            for formulas, warehouse in list_ingredients:
-                data_ingredients.append({
-                    "warehouse_id": warehouse.id,
-                    "formulas_id": formulas.id,
-                    "ingredient_name": warehouse.ingredient_name,
-                    "quantity_required": formulas.quantity_required
-                })
-                
+                      
             data_product_detail.append({
                 "id": product.id,
                  "name_product": product.name_product,
                  "price": product.price,
-                 "quantity_available": product.quantity_available,
+                 "quantity_available": product.quantity,
                  "image_product": product.image_product,
                  "is_active": product.is_active,
                 "category": product.category.name_category,
                 "category_id": product.category_id,
-                "ingredients": data_ingredients
+                "created_date": product.created_date
+                
                 } )
             
         
@@ -125,43 +111,33 @@ def get_product_by_id(product_id: int, db:Session):
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-
-
-def get_product_detail_crud(product_id: int, db: Session):
+def get_product_by_name(name_product: str, db:Session):
     try:
-        # Lấy thông tin sản phẩm từ bảng Products
-        product_info = db.query(tables.Products).filter(tables.Products.id == product_id).first()
-        if not product_info:
-            raise HTTPException(status_code=404, detail="Product not found")
-
-        # Lấy danh sách nguyên liệu và công thức tương ứng từ bảng Formulas và Warehouse
-        list_ingredients = db.query(tables.Formulas, tables.Warehouse)\
-                              .join(tables.Warehouse, tables.Formulas.warehouse_id == tables.Warehouse.id)\
-                              .filter(tables.Formulas.product_id == product_id)\
-                              .all()
-
-        # Tạo danh sách thông tin nguyên liệu
-        data_ingredients = []
-        for formulas, warehouse in list_ingredients:
-            data_ingredients.append({
-                "warehouse_id": warehouse.id,
-                "formulas_id": formulas.id,
-                "ingredient_name": warehouse.ingredient_name,
-                "quantity_required": formulas.quantity_required
-            })
-
-        # Tạo dữ liệu response
-        data_res = {
-            "id": product_info.id,
-            "name_product": product_info.name_product,
-            "image_product": product_info.image_product,
-            "ingredients": data_ingredients
-        }
-
-        return generate_response("success", 200, "Get product detail successfully", data_res)
-
+        products = db.query(tables.Products).filter(tables.Products.name_product.like(f"{name_product}%"))\
+                    .join(tables.Category, tables.Products.category_id == tables.Category.id)\
+                    .all()
+        
+        if not products:
+            raise HTTPException(status_code=404, detail=generate_response("error", 404, "Product not found"))
+        else:
+            data_product_detail =[]
+            for product in products:
+                        
+                data_product_detail.append({
+                    "id": product.id,
+                    "name_product": product.name_product,
+                    "price": product.price,
+                    "quantity_available": product.quantity,
+                    "image_product": product.image_product,
+                    "is_active": product.is_active,
+                    "category": product.category.name_category,
+                    "category_id": product.category_id,
+                    "created_date": product.created_date
+                    } )
+            return generate_response("success", 200, "Get product successfully", data_product_detail)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
 
 
 def update_product_CRUD(product: UpdateProductDetail,product_id : int, db: Session):
@@ -172,14 +148,10 @@ def update_product_CRUD(product: UpdateProductDetail,product_id : int, db: Sessi
                                 name_product=product.name,
                                 image_product=product.image,
                                 category_id=product.category_id,
+                                quantity=product.quantity,
                                 price=product.price
                             ))
-        for item in product.formulas:
-            db.execute(update(tables.Formulas)
-                       .where(tables.Formulas.id == item.get("formulas_id"))
-                       .values(
-                           quantity_required=item.get("quantity_required")
-                       ))
+        
        
         rows_affected = result.rowcount
         # Kiểm tra có hàng nào được cập nhật không

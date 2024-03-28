@@ -32,6 +32,7 @@ class UpdateProduct(BaseModel):
 class UpdateProductDetail(BaseModel):
     name: str
     price: float
+    quantity: int
     image: str
     category_id: int
     

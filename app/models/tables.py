@@ -80,14 +80,13 @@ class Products(Base):
     image_product = Column(String(255))
     category_id = Column(Integer, ForeignKey('Category.id'))
     price = Column(Numeric(10, 2), nullable=False)
-    quantity_available =  Column(Integer, nullable=False)
+    quantity =  Column(Integer, nullable=False)
     is_active = Column(Boolean, default=True)
     created_date = Column(DATETIME, default=datetime.now())
     
     category = relationship("Category", back_populates="products", lazy=True)
     cart_product = relationship("Cart", back_populates="products", lazy=True)
     order_details = relationship("OrderDetail", back_populates="products", lazy=True)
-    formulas = relationship("Formulas", back_populates="products", lazy=True)
     
     
 
@@ -152,26 +151,30 @@ class Warehouse(Base):
     
     id = Column(Integer, primary_key=True, autoincrement=True)
     ingredient_name = Column(String(100), nullable=False)
-    description = Column(String(100), nullable=False)
     quantity_per_unit = Column(Numeric(10,2), nullable=False)
     unit_of_measure =Column(String(50), nullable=False)    
     purchase_price = Column(Numeric(10,2), nullable=False)
     created_date = Column(DateTime, default=datetime.now())
-
-    formulas = relationship("Formulas", back_populates="warehouse", lazy=True)
+    supplier_id = Column(Integer, ForeignKey('Suppliers.id'), nullable=False)
+    
+    suppliers = relationship("Suppliers", back_populates="warehouse", lazy=True)
     
 
-class Formulas(Base):
-    __tablename__ = 'Formulas'
+class Suppliers(Base):
+    __tablename__ = 'Suppliers'
     
     id = Column(Integer, primary_key=True, autoincrement=True)
-    product_id = Column(Integer, ForeignKey('Products.id'), nullable=False)
-    quantity_required = Column(Integer, nullable=False)
+    name_supplier = Column(String(100), nullable=False)
+    address = Column(String(100), nullable=False)
+    phone = Column(String(100), nullable=False)
+    email = Column(String(100), nullable=False)
     created_date = Column(DateTime, default=datetime.now())
-    warehouse_id = Column(Integer, ForeignKey('Warehouse.id'), nullable=False)
     
-    warehouse = relationship("Warehouse", back_populates="formulas", lazy=True)
-    products = relationship("Products", back_populates="formulas", lazy=True)
+    warehouse = relationship("Warehouse", back_populates="suppliers", lazy=True)
+    
+    
+    
+    
     
     
 

@@ -1,6 +1,6 @@
 import json
 import os
-from typing import Annotated, List, Union
+from typing import Annotated, List, Optional, Union
 from urllib.parse import quote
 from dotenv import load_dotenv
 from fastapi import APIRouter, Body, Depends, Form, HTTPException, Query, staticfiles, status, File, UploadFile, FastAPI
@@ -89,9 +89,11 @@ def get__all_product(page: int = Query(1, gt=0), limit: int = Query(30, gt=0), d
 def get_product(product_id, db: Session = Depends(get_db)):
     return product.get_product_by_id(product_id,db)
 
-@router_product.get("/product-detail/{product_id}")
-def get_product_detail(product_id, db: Session = Depends(get_db)):
-    return product.get_product_detail_crud(product_id,db)
+
+@router_product.get("/product")
+def get_product(search: Optional[str] = Query(...), db: Session = Depends(get_db)):
+    return product.get_product_by_name(search,db)
+
 
 
 
@@ -100,6 +102,7 @@ async def update_product(product_id,
     name: Annotated[str,Form()],
     category_id: Annotated[int,Form()], 
     price: Annotated[float, Form()], 
+    quantity: Annotated[int, Form()], 
     file: Union[str, UploadFile] = [File(...)],
     db: Session = Depends(get_db)
     ):
@@ -107,7 +110,7 @@ async def update_product(product_id,
    
     try:
         if isinstance(file, str):
-            new_product = UpdateProductDetail(name=name,price=price, image=file, category_id=category_id)
+            new_product = UpdateProductDetail(name=name,price=price,quantity=quantity, image=file, category_id=category_id)
             return product.update_product_CRUD(new_product, product_id, db)
         else:
         # Đảm bảo thư mục uploads tồn tại hay chưa
@@ -123,7 +126,7 @@ async def update_product(product_id,
                 f.write(file.file.read())
             
             # new_product = CreateProduct(name=name, image=image_url, category_id=category_id, price=price)
-            product_update = UpdateProductDetail(name=name,price=price, image=file_path, category_id=category_id)
+            product_update = UpdateProductDetail(name=name,price=price, quantity=quantity, image=file_path, category_id=category_id)
             return product.update_product_CRUD(product_update, product_id, db)
     except Exception as e:
       raise HTTPException(500, detail=generate_response("error", 500,f"Internal server error: {str(e)}"))
