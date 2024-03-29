@@ -22,7 +22,7 @@ def create_product(new_product: CreateProduct, db: Session):
         image_product = new_product.image,
         category_id = new_product.category_id,
         price = new_product.price,
-        quantity_available = 0,
+        quantity = 0,
         is_active = 1
     
     )

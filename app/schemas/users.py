@@ -21,8 +21,11 @@ class UserLogin(BaseModel):
     role_id: int
 
 class EditUser(BaseModel):
-    is_active: bool
+    email: str
+    phone: Optional[str] = None
+    address: Optional[str] = None
     role_id: int
+    is_active: int
     
 class AuthUser(BaseModel):
     role: str

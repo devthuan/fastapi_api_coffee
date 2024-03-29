@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session, load_only, Load
 from sqlalchemy.exc import IntegrityError, InvalidRequestError, OperationalError, ProgrammingError, SQLAlchemyError
 
 
-from ..schemas.users import UserBase, UserLogin
+from ..schemas.users import EditUser, UserBase, UserLogin
 from ..services import authenticate
 
 from ..models import tables
@@ -31,6 +31,36 @@ def get_user_by_id(db: Session, user_id: int):
         "created_date": user.created_date
     }
     return generate_response("success", 200, "get user success", user_data)  
+
+def get_user_by_word_email(search: str, db: Session):
+    try:
+        user_role = db.query(tables.User, tables.Role)\
+                      .join(tables.Role, tables.User.role_id == tables.Role.id)\
+                      .filter(tables.User.email.like(f"{search}%"))\
+                      .all()
+        
+        if not user_role:
+            return generate_response("success", 200, "No users found", [])
+
+        data_res = [
+            {
+            "id": user.id,
+            "email": user.email,
+            "phone": user.phone,
+            "address": user.address,
+            "role_code": role.code,
+            "role_name": role.name,
+            "role_description": role.description,   
+            "role_id": user.role_id,
+            "is_active": user.is_active,
+            "created_date": user.created_date
+        } for user, role in user_role
+        ]
+        
+        return generate_response("success", 200, "get user success", data_res)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
 
 def get_user_full_by_id(db: Session, user_id: int):
     user = db.query(tables.User).filter(tables.User.id == user_id).first()
@@ -79,9 +109,8 @@ def get_user_by_email(db: Session, email: str):
 def get_all_user(page: int, limit:int, db: Session):
     offset = (page -1) * limit
     try:
-        users = db.query(tables.User)\
-                    .options(Load(tables.User)\
-                    .load_only(tables.User.id, tables.User.email, tables.User.role_id, tables.User.is_active, tables.User.created_date ))\
+        users = db.query(tables.User, tables.Role)\
+                    .join(tables.Role, tables.User.role_id == tables.Role.id)\
                     .offset(offset)\
                     .limit(limit).all()
         total_items = db.query(tables.User).count()
@@ -92,11 +121,16 @@ def get_all_user(page: int, limit:int, db: Session):
             {
                 "id": user.id,
                 "email": user.email,
+                "phone": user.phone,
+                "address": user.address,
+                "role_code": role.code,
+                "role_name": role.name,
+                "role_description": role.description,   
                 "role_id": user.role_id,
                 "is_active": user.is_active,
                 "created_date": user.created_date
             }
-            for user in users
+            for user, role in users
         ]
         data_res = {
             "page": page,
@@ -139,13 +173,15 @@ def new_user(user: UserBase, db: Session):
         db.rollback()
         raise HTTPException(status_code=500, detail=generate_response("error", 500,"Internal server error."))
     
-def update_user(new_user: dict, user_id: int, db: Session):
+def update_user(user_update: EditUser, user_id: int, db: Session):
     try:
-        query = text("UPDATE users SET role_id=:role_id, is_active=:is_active WHERE id=:user_id")
-        result = db.execute(query, { "role_id": new_user.role_id, "is_active": new_user.is_active, "user_id": user_id})
-        rows_affected = result.rowcount
+        user = db.query(tables.User).filter(tables.User.id == user_id).first();
         
-        if rows_affected > 0:
+        if user:
+             # Cập nhật các thuộc tính của đối tượng người dùng
+            for key, value in user_update.dict().items():
+                setattr(user, key, value)
+  
             db.commit()
             return generate_response("success", 200,"Update user successfully.")
         else:
@@ -153,10 +189,10 @@ def update_user(new_user: dict, user_id: int, db: Session):
 
     except SQLAlchemyError as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=generate_response("error", 500,"Internal server error."))
+        raise HTTPException(status_code=500, detail=generate_response("error", 500,"Internal server error.", str(e)))
     except Exception as e:
         db.rollback()
-        raise HTTPException(status_code=500, detail=generate_response("error", 500,"Internal server error."))
+        raise HTTPException(status_code=500, detail=generate_response("error", 500,"Internal server error.", str(e)))
     
 def change_active_user(user_id: int, db: Session):
     pass

@@ -1,3 +1,4 @@
+from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -47,6 +48,10 @@ def get_user_by_id(user_id, db: Session = Depends(get_db)):
     except Exception as e:
       return generate_response("error", status.HTTP_500_INTERNAL_SERVER_ERROR, "Internal server error.",e)
 
+@router_user.get("/user")
+def search_user(search : Optional[str] = Query(...), db: Session =Depends(get_db)):
+    return user.get_user_by_word_email(search, db)
+
 @router_user.post("/user")
 def create_user_route(user_form: UserBase, db: Session = Depends(get_db)):
     try:
@@ -68,7 +73,8 @@ def update_user(new_user: EditUser, user_id, db: Session = Depends(get_db)):
         raise e
     except Exception as e:
         # Xử lý các lỗi khác tại đây
-        raise HTTPException(status_code=500, detail="Internal server error")
+        raise e
+            
 
 @router_user.patch("/user/active/{user_id}")
 def change_status_user(user_id, db : Session = Depends(get_db)):

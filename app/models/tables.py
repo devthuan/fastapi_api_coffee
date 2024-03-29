@@ -14,6 +14,8 @@ class User(Base):
     password = Column(String(255))
     is_active = Column(Boolean)
     role_id = Column(Integer, ForeignKey('Roles.id'))
+    address = Column(String(200))
+    phone = Column(String(50))
     created_date = Column(DateTime, default=datetime.now)
     
     role = relationship("Role", back_populates="users")
