@@ -39,7 +39,6 @@ def get_all_warehouse(user_id : int = Depends(get_current_user_id),  db : Sessio
 
 @router_supplier.put("/supplier/{supplier_id}")
 def update_supplier(supplier_id: int, update_supplier: SupplierCreate,  db : Session = Depends(get_db)):
-    # return update_supplier
     return update_supplier_crud(update_supplier, supplier_id,db)
 
 @router_supplier.delete("/supplier/{supplier_id}")
