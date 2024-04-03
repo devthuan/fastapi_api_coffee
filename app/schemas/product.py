@@ -4,7 +4,6 @@ from fastapi import File, UploadFile
 from pydantic import BaseModel, Field, validator
 from sqlalchemy import Boolean
 
-from app.schemas.formulas import FormulasCreate
 
 class CreateProduct(BaseModel):
     name: str

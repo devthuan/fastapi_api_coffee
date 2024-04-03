@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 
-from .routes import authenticate, user, product, cart, order, warehouse, formulas
+from .routes import authenticate, user, product, cart, order, warehouse, supplier
 
 from .models import tables
 
@@ -43,4 +43,4 @@ app.include_router(product.router_product, prefix="/api/v1")
 app.include_router(cart.router_cart, prefix="/api/v1")
 app.include_router(order.router_order, prefix="/api/v1")
 app.include_router(warehouse.router_warehouse, prefix="/api/v1")
-app.include_router(formulas.router_formulas, prefix="/api/v1")
+app.include_router(supplier.router_supplier, prefix="/api/v1")

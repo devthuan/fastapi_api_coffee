@@ -25,7 +25,7 @@ class EditUser(BaseModel):
     phone: Optional[str] = None
     address: Optional[str] = None
     role_id: int
-    is_active: int
+    is_active: bool
     
 class AuthUser(BaseModel):
     role: str
