@@ -43,7 +43,7 @@ def warehouse_import(warehouse: WarehouseCreate, db : Session):
     try:
         for item in warehouse.detail_ingredient:
             warehouse_model = tables.Warehouse (
-                ingredient_name = warehouse.ingredient_name,
+                ingredient_name = item.ingredient_name,
                 quantity_per_unit = item.quantity_per_unit,
                 unit_of_measure = item.unit_of_measure,
                 purchase_price = item.purchase_price,

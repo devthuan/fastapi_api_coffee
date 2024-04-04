@@ -27,7 +27,7 @@ class WarehouseBase(BaseModel):
 class DetailIngredient(BaseModel):
     ingredient_name: str
     quantity_per_unit: float
-    unit_of_measure: str
+    unit_of_measure: Optional[str] = "grams"
     purchase_price: float
     
     @validator('quantity_per_unit')
@@ -50,7 +50,7 @@ class WarehouseCreate(BaseModel):
 class WarehouseUpdate(BaseModel):
     ingredient_name: str
     quantity_per_unit: float
-    unit_of_measure: str
+    unit_of_measure: Optional[str] = "grams"
     purchase_price: float
     supplier_id: int
     
